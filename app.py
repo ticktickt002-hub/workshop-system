@@ -13,14 +13,15 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-
+# Пользователи
 class User(db.Model):
+    __tablename__ = "users"  # безопасное имя таблицы
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
-
+# Заявки
 class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_name = db.Column(db.String(100), nullable=False)
@@ -30,9 +31,9 @@ class Request(db.Model):
     device_brand = db.Column(db.String(100), nullable=False)
     problem = db.Column(db.String(200), nullable=False)
     comment = db.Column(db.Text)
-    assigned_to = db.Column(db.Integer, db.ForeignKey("user.id"))
+    assigned_to = db.Column(db.Integer, db.ForeignKey("users.id"))
 
-
+# Декоратор проверки доступа
 def login_required(role=None):
     def wrapper(func):
         def decorated_view(*args, **kwargs):
@@ -47,19 +48,16 @@ def login_required(role=None):
         return decorated_view
     return wrapper
 
-
 @app.route("/")
 def index():
     if "user_id" not in session:
         return redirect(url_for("login"))
-
     role = session.get("role")
     if role == "master":
         requests = Request.query.filter_by(assigned_to=session["user_id"]).all()
     else:
         requests = Request.query.all()
     return render_template("index.html", requests=requests, role=role)
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -72,12 +70,10 @@ def login():
         flash("Неверный логин или пароль")
     return render_template("login.html")
 
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
-
 
 @app.route("/add_request", methods=["GET", "POST"])
 @login_required(role=["manager", "director", "creator"])
@@ -100,7 +96,6 @@ def add_request():
     masters = User.query.filter_by(role="master").all()
     return render_template("add_request.html", masters=masters)
 
-
 @app.route("/register", methods=["GET", "POST"])
 @login_required(role=["director", "creator"])
 def register():
@@ -116,14 +111,10 @@ def register():
         return redirect(url_for("index"))
     return render_template("register.html")
 
-
 if __name__ == "__main__":
     with app.app_context():
-        # Создаём таблицы
-        db.create_all()
-        print("Таблицы созданы!")
-
-        # Создаём пользователя admin, если его ещё нет
+        db.create_all()  # создаём все таблицы
+        # создаём admin, если нет
         if not User.query.filter_by(username="admin").first():
             admin = User(
                 username="admin",
@@ -133,6 +124,4 @@ if __name__ == "__main__":
             db.session.add(admin)
             db.session.commit()
             print("Admin создан!")
-
-    # Запуск приложения
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
