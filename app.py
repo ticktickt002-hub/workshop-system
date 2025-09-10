@@ -119,8 +119,19 @@ def register():
 
 if __name__ == "__main__":
     with app.app_context():
-        # Создаём все таблицы
+        # Проверяем DATABASE_URL и соединение с базой
+        from sqlalchemy import create_engine
+        try:
+            engine = create_engine(os.environ.get("DATABASE_URL"))
+            conn = engine.connect()
+            print("Соединение с базой успешно!")
+            conn.close()
+        except Exception as e:
+            print("Ошибка подключения к базе:", e)
+
+        # Создаём таблицы
         db.create_all()
+        print("Таблицы созданы!")
 
         # Создаём пользователя admin, если его ещё нет
         if not User.query.filter_by(username="admin").first():
@@ -131,6 +142,7 @@ if __name__ == "__main__":
             )
             db.session.add(admin)
             db.session.commit()
+            print("Admin создан!")
 
-    # Запуск приложения с debug=True для отображения ошибок
+    # Запуск приложения
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
