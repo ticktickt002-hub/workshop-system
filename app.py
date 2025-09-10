@@ -45,7 +45,7 @@ def create_admin():
         db.session.commit()
         print("Admin создан!")
 
-@app.before_first_request
+@app.before_serving
 def initialize_database():
     db.create_all()  # создаём таблицы, если их нет
     create_admin()
