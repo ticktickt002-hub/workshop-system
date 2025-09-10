@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
 
-# Подключение к базе PostgreSQL или SQLite по умолчанию
+# Подключение к базе PostgreSQL
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL", "sqlite:///workshop.db"
 )
@@ -119,16 +119,6 @@ def register():
 
 if __name__ == "__main__":
     with app.app_context():
-        # Проверяем DATABASE_URL и соединение с базой
-        from sqlalchemy import create_engine
-        try:
-            engine = create_engine(os.environ.get("DATABASE_URL"))
-            conn = engine.connect()
-            print("Соединение с базой успешно!")
-            conn.close()
-        except Exception as e:
-            print("Ошибка подключения к базе:", e)
-
         # Создаём таблицы
         db.create_all()
         print("Таблицы созданы!")
