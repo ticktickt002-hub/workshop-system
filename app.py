@@ -6,7 +6,10 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///workshop.db")
+# Подключение к базе PostgreSQL или SQLite по умолчанию
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "sqlite:///workshop.db"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -116,5 +119,18 @@ def register():
 
 if __name__ == "__main__":
     with app.app_context():
+        # Создаём все таблицы
         db.create_all()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+        # Создаём пользователя admin, если его ещё нет
+        if not User.query.filter_by(username="admin").first():
+            admin = User(
+                username="admin",
+                password=generate_password_hash("admin123"),
+                role="creator"
+            )
+            db.session.add(admin)
+            db.session.commit()
+
+    # Запуск приложения с debug=True для отображения ошибок
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
