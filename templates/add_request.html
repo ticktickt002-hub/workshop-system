@@ -5,23 +5,23 @@
     <title>Новая заявка</title>
 </head>
 <body>
-    <h1>Создать заявку</h1>
-    <form method="post">
-        Имя клиента: <input type="text" name="client_name" required><br>
-        Телефон: <input type="text" name="client_phone" required><br>
-        Адрес: <input type="text" name="client_address" required><br>
-        Вид техники: <input type="text" name="device_type" required><br>
-        Марка: <input type="text" name="device_brand" required><br>
-        Проблема: <input type="text" name="problem" required><br>
-        Комментарий: <input type="text" name="comment"><br>
-        Назначить мастера:
-        <select name="assigned_to">
-            <option value="">—</option>
-            {% for m in masters %}
-                <option value="{{ m.id }}">{{ m.username }}</option>
-            {% endfor %}
-        </select><br>
-        <button type="submit">Сохранить</button>
-    </form>
+<h1>Создать заявку</h1>
+<form method="post">
+    Имя клиента: <input type="text" name="client_name" required><br>
+    Телефон: <input type="text" name="client_phone" required><br>
+    Адрес: <input type="text" name="client_address" required><br>
+    Вид техники: <input type="text" name="device_type" required><br>
+    Марка: <input type="text" name="device_brand" required><br>
+    Проблема: <input type="text" name="problem" required><br>
+    Комментарий: <input type="text" name="comment"><br>
+    Назначить мастера:
+    <select name="assigned_to">
+        <option value="">—</option>
+        {% for m in masters %}
+        <option value="{{ m.id }}">{{ m.username }}</option>
+        {% endfor %}
+    </select><br>
+    <button type="submit">Сохранить</button>
+</form>
 </body>
 </html>
