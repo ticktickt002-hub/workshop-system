@@ -13,15 +13,14 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# Пользователи
+# --- Модели ---
 class User(db.Model):
-    __tablename__ = "users"  # безопасное имя таблицы
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
-# Заявки
 class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_name = db.Column(db.String(100), nullable=False)
@@ -33,7 +32,25 @@ class Request(db.Model):
     comment = db.Column(db.Text)
     assigned_to = db.Column(db.Integer, db.ForeignKey("users.id"))
 
-# Декоратор проверки доступа
+# --- Инициализация базы ---
+def create_admin():
+    """Создаём admin, если его нет"""
+    if not User.query.filter_by(username="admin").first():
+        admin = User(
+            username="admin",
+            password=generate_password_hash("admin123"),
+            role="creator"
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("Admin создан!")
+
+@app.before_first_request
+def initialize_database():
+    db.create_all()  # создаём таблицы, если их нет
+    create_admin()
+
+# --- Декоратор для проверки ролей ---
 def login_required(role=None):
     def wrapper(func):
         def decorated_view(*args, **kwargs):
@@ -48,6 +65,7 @@ def login_required(role=None):
         return decorated_view
     return wrapper
 
+# --- Маршруты ---
 @app.route("/")
 def index():
     if "user_id" not in session:
@@ -111,17 +129,6 @@ def register():
         return redirect(url_for("index"))
     return render_template("register.html")
 
+# --- Запуск приложения ---
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()  # создаём все таблицы
-        # создаём admin, если нет
-        if not User.query.filter_by(username="admin").first():
-            admin = User(
-                username="admin",
-                password=generate_password_hash("admin123"),
-                role="creator"
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("Admin создан!")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
