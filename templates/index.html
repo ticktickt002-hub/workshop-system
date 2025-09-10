@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Заявки</title>
+</head>
+<body>
+    <h1>Список заявок</h1>
+    <p>Ваша роль: {{ role }}</p>
+    <a href="{{ url_for('logout') }}">Выйти</a><br><br>
+
+    {% if role in ["manager", "director", "creator"] %}
+        <a href="{{ url_for('add_request') }}">Создать заявку</a><br>
+        <a href="{{ url_for('register') }}">Добавить пользователя</a><br>
+    {% endif %}
+
+    <ul>
+    {% for req in requests %}
+        <li>
+            <b>{{ req.device_type }} ({{ req.device_brand }})</b> —
+            {{ req.problem }}<br>
+            Клиент: {{ req.client_name }}, {{ req.client_phone }}, {{ req.client_address }}<br>
+            Комментарий: {{ req.comment or "—" }}
+        </li>
+    {% else %}
+        <li>Заявок пока нет</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
